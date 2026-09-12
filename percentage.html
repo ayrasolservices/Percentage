@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <title>Percentage Calculator</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      background: #f5f7fb;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 1rem 0.75rem 2.5rem;
+      color: #1a2639;
+      line-height: 1.4;
+      overflow-x: hidden;
+    }
+
+    /* ========== WRAPPER: holds currency + calculator side by side ========== */
+    .page-wrap {
+      display: flex;
+      align-items: flex-start;
+      gap: 1.5rem;
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    /* ========== CURRENCY SWITCHER (LEFT COLUMN) ========== */
+    .currency-column {
+      flex: 0 0 auto;
+      position: sticky;
+      top: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+      padding-top: 0.5rem;
+    }
+
+    .currency-label-top {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #7b8ba6;
+    }
+
+    .currency-toggle {
+      display: inline-flex;
+      flex-direction: column;
+      background: #ffffff;
+      border-radius: 24px;
+      padding: 8px;
+      box-shadow: 0 8px 28px rgba(0, 20, 40, 0.12), 0 3px 8px rgba(0, 0, 0, 0.05);
+      border: 2px solid #e2e8f2;
+      cursor: pointer;
+      user-select: none;
+      transition: box-shadow 0.2s, border-color 0.2s;
+      position: relative;
+      gap: 6px;
+    }
+
+    .currency-toggle:hover {
+      box-shadow: 0 10px 32px rgba(0, 20, 40, 0.16), 0 4px 10px rgba(0, 0, 0, 0.07);
+      border-color: #cbd9ed;
+    }
+
+    .currency-option {
+      padding: 1rem 1.4rem;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #7b8ba6;
+      border-radius: 18px;
+      transition: color 0.2s, background 0.2s, transform 0.15s;
+      min-width: 84px;
+      text-align: center;
+      line-height: 1;
+      position: relative;
+      z-index: 2;
+      letter-spacing: -0.02em;
+    }
+
+    .currency-option.active {
+      color: #ffffff;
+      background: #2a6ef0;
+      box-shadow: 0 4px 14px rgba(42, 110, 240, 0.4);
+    }
+
+    .currency-option:not(.active):hover {
+      color: #4e5f7a;
+    }
+
+    .currency-sub {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #7b8ba6;
+      margin-top: 2px;
+    }
+
+    .currency-option.active .currency-sub {
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    /* ========== CALCULATOR COLUMN ========== */
+    .calculator-column {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    /* ---------- cards ---------- */
+    .card {
+      background: #ffffff;
+      border-radius: 24px;
+      padding: 1.75rem 1.5rem;
+      box-shadow: 0 8px 24px rgba(0, 20, 40, 0.06), 0 2px 6px rgba(0, 0, 0, 0.02);
+      margin-bottom: 1.25rem;
+      transition: box-shadow 0.2s;
+    }
+
+    .card-tight {
+      padding: 1.25rem 1.25rem;
+    }
+
+    .section-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: #5e6f8c;
+      margin-bottom: 0.9rem;
+    }
+
+    /* ---------- amount ---------- */
+    .amount-input-wrapper {
+      margin-bottom: 1rem;
+    }
+
+    .amount-label {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #2d3b55;
+      margin-bottom: 0.3rem;
+    }
+
+    .amount-field {
+      font-size: 2rem;
+      font-weight: 600;
+      padding: 0.75rem 1rem;
+      border: 2px solid #dbe2ed;
+      border-radius: 18px;
+      width: 100%;
+      background: #ffffff;
+      color: #1a2639;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+    }
+
+    .amount-field:focus {
+      border-color: #2a6ef0;
+      box-shadow: 0 0 0 4px rgba(42, 110, 240, 0.12);
+    }
+
+    /* ---------- amount presets ---------- */
+    .preset-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 0.45rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .preset-btn {
+      background: #f0f3f9;
+      border: none;
+      border-radius: 40px;
+      padding: 0.55rem 0.25rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #1f2a44;
+      cursor: pointer;
+      transition: background 0.1s;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .preset-btn:hover,
+    .preset-btn:active {
+      background: #e2e8f2;
+    }
+
+    .preset-btn.custom-btn {
+      grid-column: span 6;
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      font-weight: 600;
+      color: #2a6ef0;
+      margin-top: 0.2rem;
+      min-height: 44px;
+    }
+
+    .preset-btn.custom-btn:hover {
+      background: #f0f7ff;
+      border-color: #2a6ef0;
+    }
+
+    /* ---------- percentage hero ---------- */
+    .percentage-hero {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin-top: 1.5rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .percentage-big {
+      font-size: 3rem;
+      font-weight: 700;
+      line-height: 1.1;
+      color: #1a2639;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .percentage-hint {
+      font-size: 0.85rem;
+      color: #7b8ba6;
+      font-weight: 500;
+    }
+
+    /* ---------- slider ---------- */
+    .slider-wrapper {
+      padding: 0.5rem 0;
+      margin-bottom: 0.75rem;
+    }
+
+    input[type=range].percentage-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 10px;
+      background: #e6ecf5;
+      border-radius: 20px;
+      outline: none;
+      margin: 0.75rem 0 0.5rem;
+      cursor: pointer;
+    }
+
+    input[type=range].percentage-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 30px;
+      height: 30px;
+      background: #ffffff;
+      border: 3px solid #2a6ef0;
+      border-radius: 50%;
+      box-shadow: 0 2px 8px rgba(42, 110, 240, 0.3);
+      cursor: grab;
+      transition: transform 0.05s;
+    }
+
+    input[type=range].percentage-slider::-webkit-slider-thumb:active {
+      cursor: grabbing;
+      transform: scale(1.1);
+    }
+
+    input[type=range].percentage-slider::-moz-range-thumb {
+      width: 30px;
+      height: 30px;
+      background: #ffffff;
+      border: 3px solid #2a6ef0;
+      border-radius: 50%;
+      box-shadow: 0 2px 8px rgba(42, 110, 240, 0.3);
+      cursor: grab;
+    }
+
+    /* ---------- ticks ---------- */
+    .ticks-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 0 4px;
+      user-select: none;
+      pointer-events: none;
+      margin-bottom: 1rem;
+    }
+
+    .tick-major {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
+    .static-dot {
+      width: 6px;
+      height: 6px;
+      background: #2a6ef0;
+      border-radius: 50%;
+      margin-bottom: 3px;
+      flex-shrink: 0;
+    }
+
+    .tick-group {
+      display: flex;
+      gap: 2px;
+      justify-content: center;
+      align-items: center;
+      height: 8px;
+    }
+
+    .tick-minor {
+      width: 2px;
+      height: 6px;
+      background: #cbd5e1;
+      border-radius: 2px;
+    }
+
+    .tick-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #3d4d6b;
+      white-space: nowrap;
+    }
+
+    /* ---------- percentage shortcuts ---------- */
+    .shortcut-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+
+    .shortcut-btn {
+      background: #f0f3f9;
+      border: none;
+      border-radius: 40px;
+      padding: 0.7rem 0.2rem;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #1f2a44;
+      cursor: pointer;
+      transition: background 0.1s;
+      text-align: center;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .shortcut-btn:hover,
+    .shortcut-btn:active {
+      background: #e2e8f2;
+    }
+
+    .shortcut-btn.other-btn {
+      grid-column: span 5;
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      color: #2a6ef0;
+    }
+
+    .shortcut-btn.other-btn:hover {
+      background: #f0f7ff;
+      border-color: #2a6ef0;
+    }
+
+    /* ---------- STICKY RESULT BAR ---------- */
+    .sticky-result {
+      position: sticky;
+      top: 0.5rem;
+      z-index: 100;
+      margin-bottom: 1.25rem;
+    }
+
+    .main-result-card {
+      background: #1a2639;
+      color: #ffffff;
+      border-radius: 20px;
+      padding: 1.1rem 1.3rem;
+      box-shadow: 0 12px 28px -6px rgba(26, 38, 57, 0.35), 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .main-result-label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      opacity: 0.75;
+      margin-bottom: 0.2rem;
+    }
+
+    .main-result-value {
+      font-size: 2.4rem;
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.6rem;
+      font-variant-numeric: tabular-nums;
+      word-break: break-word;
+    }
+
+    .main-result-value .copy-btn {
+      background: rgba(255, 255, 255, 0.15);
+      border: none;
+      color: #ffffff;
+      font-size: 0.8rem;
+      font-weight: 500;
+      padding: 0.45rem 0.9rem;
+      border-radius: 40px;
+      cursor: pointer;
+      transition: background 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      line-height: 1;
+      min-height: 36px;
+    }
+
+    .main-result-value .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    /* ---------- result rows ---------- */
+    .result-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.85rem 1.1rem;
+      background: #ffffff;
+      border-radius: 16px;
+      margin-bottom: 0.6rem;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+      border: 1px solid #edf2f7;
+      gap: 0.5rem;
+    }
+
+    .result-row-label {
+      font-weight: 500;
+      color: #4e5f7a;
+      font-size: 0.95rem;
+    }
+
+    .result-row-value {
+      font-weight: 700;
+      font-size: 1.4rem;
+      font-variant-numeric: tabular-nums;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-left: auto;
+    }
+
+    .copy-icon {
+      background: #f0f3f9;
+      border: none;
+      border-radius: 40px;
+      padding: 0.4rem 0.85rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #2d3b55;
+      cursor: pointer;
+      transition: background 0.1s;
+      line-height: 1.2;
+      min-height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .copy-icon:hover {
+      background: #e2e8f2;
+    }
+
+    /* ---------- reference grid ---------- */
+    .reference-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .ref-item {
+      background: #f5f7fb;
+      border-radius: 14px;
+      padding: 0.6rem 0.5rem;
+      font-size: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      cursor: pointer;
+      transition: background 0.1s;
+      border: 1px solid #e9eef6;
+      font-weight: 500;
+      text-align: center;
+      min-height: 52px;
+    }
+
+    .ref-item:hover {
+      background: #eef3fa;
+      border-color: #cbd9ed;
+    }
+
+    .ref-percent {
+      font-weight: 600;
+      color: #5e6f8c;
+      font-size: 0.8rem;
+    }
+
+    .ref-value {
+      font-weight: 700;
+      color: #1a2639;
+      font-variant-numeric: tabular-nums;
+      font-size: 0.9rem;
+    }
+
+    /* ---------- tools ---------- */
+    .tool-section {
+      margin-top: 1.5rem;
+    }
+
+    .tool-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 0.9rem;
+      color: #1a2639;
+      letter-spacing: -0.01em;
+    }
+
+    .two-col-inputs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 0.9rem;
+    }
+
+    .input-group {
+      flex: 1 1 140px;
+      min-width: 0;
+    }
+
+    .input-group label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #5e6f8c;
+      margin-bottom: 0.3rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .input-group input {
+      width: 100%;
+      font-size: 1.15rem;
+      padding: 0.7rem 0.9rem;
+      border: 2px solid #dbe2ed;
+      border-radius: 14px;
+      background: #ffffff;
+      font-weight: 500;
+      outline: none;
+      transition: border-color 0.15s;
+      font-variant-numeric: tabular-nums;
+      min-height: 48px;
+    }
+
+    .input-group input:focus {
+      border-color: #2a6ef0;
+      box-shadow: 0 0 0 3px rgba(42, 110, 240, 0.1);
+    }
+
+    .result-highlight {
+      background: #eef4ff;
+      border-radius: 18px;
+      padding: 1rem 1.2rem;
+      font-size: 1.4rem;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.7rem;
+      color: #1a2639;
+      border: 1px solid #d4e2ff;
+      margin-top: 0.5rem;
+    }
+
+    .small-note {
+      font-size: 0.75rem;
+      color: #7b8ba6;
+      margin-top: 0.4rem;
+    }
+
+    /* ========================================================= */
+    /* ============== RESPONSIVE BREAKPOINTS ================== */
+    /* ========================================================= */
+
+    /* Tablet: stack the currency switcher above calculator */
+    @media (max-width: 860px) {
+      .page-wrap {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .currency-column {
+        position: static;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        width: 100%;
+        padding: 0;
+      }
+
+      .currency-label-top {
+        display: none;
+      }
+
+      .currency-toggle {
+        flex-direction: row;
+        border-radius: 40px;
+        padding: 5px;
+        gap: 4px;
+      }
+
+      .currency-option {
+        padding: 0.7rem 1.2rem;
+        font-size: 1.2rem;
+        min-width: 70px;
+        border-radius: 32px;
+      }
+
+      .currency-sub {
+        display: none;
+      }
+
+      .calculator-column {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 0.75rem 0.5rem 2rem;
+      }
+
+      .page-wrap {
+        gap: 0.75rem;
+      }
+
+      .currency-toggle {
+        padding: 4px;
+      }
+
+      .currency-option {
+        padding: 0.6rem 1rem;
+        font-size: 1.05rem;
+        min-width: 60px;
+      }
+
+      .card {
+        border-radius: 20px;
+        padding: 1.25rem 1rem;
+        margin-bottom: 1rem;
+      }
+
+      .card-tight {
+        padding: 1rem 0.9rem;
+      }
+
+      .amount-field {
+        font-size: 1.6rem;
+        padding: 0.65rem 0.85rem;
+        border-radius: 16px;
+      }
+
+      .amount-label {
+        font-size: 0.9rem;
+      }
+
+      .preset-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.4rem;
+      }
+
+      .preset-btn {
+        font-size: 0.78rem;
+        padding: 0.5rem 0.15rem;
+        min-height: 38px;
+      }
+
+      .preset-btn.custom-btn {
+        grid-column: span 4;
+        font-size: 0.85rem;
+      }
+
+      .percentage-big {
+        font-size: 2.4rem;
+      }
+
+      .percentage-hint {
+        font-size: 0.75rem;
+      }
+
+      .percentage-hero {
+        margin-top: 1.2rem;
+      }
+
+      input[type=range].percentage-slider {
+        height: 8px;
+      }
+
+      input[type=range].percentage-slider::-webkit-slider-thumb {
+        width: 26px;
+        height: 26px;
+      }
+
+      input[type=range].percentage-slider::-moz-range-thumb {
+        width: 26px;
+        height: 26px;
+      }
+
+      .tick-minor {
+        width: 1.5px;
+        height: 5px;
+      }
+
+      .tick-label {
+        font-size: 0.6rem;
+      }
+
+      .static-dot {
+        width: 5px;
+        height: 5px;
+      }
+
+      .shortcut-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.4rem;
+      }
+
+      .shortcut-btn {
+        font-size: 0.85rem;
+        padding: 0.6rem 0.15rem;
+        min-height: 42px;
+      }
+
+      .shortcut-btn.other-btn {
+        grid-column: span 4;
+      }
+
+      .sticky-result {
+        top: 0.35rem;
+      }
+
+      .main-result-card {
+        padding: 0.9rem 1rem;
+        border-radius: 16px;
+      }
+
+      .main-result-label {
+        font-size: 0.75rem;
+      }
+
+      .main-result-value {
+        font-size: 1.9rem;
+        gap: 0.5rem;
+      }
+
+      .main-result-value .copy-btn {
+        font-size: 0.7rem;
+        padding: 0.35rem 0.7rem;
+        min-height: 32px;
+      }
+
+      .result-row {
+        padding: 0.7rem 0.9rem;
+        border-radius: 14px;
+      }
+
+      .result-row-label {
+        font-size: 0.85rem;
+      }
+
+      .result-row-value {
+        font-size: 1.15rem;
+        gap: 0.5rem;
+      }
+
+      .copy-icon {
+        font-size: 0.7rem;
+        padding: 0.35rem 0.7rem;
+        min-height: 30px;
+      }
+
+      .reference-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.4rem;
+      }
+
+      .ref-item {
+        padding: 0.5rem 0.35rem;
+        min-height: 46px;
+        border-radius: 12px;
+      }
+
+      .ref-percent {
+        font-size: 0.75rem;
+      }
+
+      .ref-value {
+        font-size: 0.82rem;
+      }
+
+      .tool-title {
+        font-size: 1.05rem;
+      }
+
+      .two-col-inputs {
+        flex-direction: column;
+        gap: 0.6rem;
+      }
+
+      .input-group {
+        flex: 1 1 100%;
+      }
+
+      .input-group input {
+        font-size: 1.05rem;
+        min-height: 46px;
+      }
+
+      .result-highlight {
+        font-size: 1.2rem;
+        padding: 0.9rem 1rem;
+        border-radius: 16px;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .preset-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .preset-btn.custom-btn {
+        grid-column: span 3;
+      }
+
+      .shortcut-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .shortcut-btn.other-btn {
+        grid-column: span 3;
+      }
+
+      .reference-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .percentage-big {
+        font-size: 2.1rem;
+      }
+
+      .main-result-value {
+        font-size: 1.65rem;
+      }
+
+      .main-result-label {
+        font-size: 0.7rem;
+      }
+    }
+
+    /* Larger touch targets on touch devices */
+    @media (hover: none) and (pointer: coarse) {
+      .preset-btn,
+      .shortcut-btn,
+      .copy-icon,
+      .copy-btn {
+        min-height: 44px;
+      }
+
+      .preset-btn:active,
+      .shortcut-btn:active,
+      .copy-icon:active,
+      .copy-btn:active {
+        opacity: 0.75;
+        transform: scale(0.97);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page-wrap">
+
+    <!-- ===== CURRENCY SWITCHER (LEFT COLUMN - LARGE) ===== -->
+    <div class="currency-column">
+      <div class="currency-label-top">Currency</div>
+      <div class="currency-toggle" id="currencyToggle" role="switch" aria-checked="false" tabindex="0">
+        <div class="currency-option active" data-currency="PKR" id="optPKR">
+          Rs
+          <div class="currency-sub">Rupees</div>
+        </div>
+        <div class="currency-option" data-currency="USD" id="optUSD">
+          $
+          <div class="currency-sub">Dollar</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CALCULATOR COLUMN ===== -->
+    <div class="calculator-column" id="app">
+
+      <!-- ===== MAIN CALCULATOR CARD ===== -->
+      <div class="card">
+        <div class="amount-input-wrapper">
+          <div class="amount-label">Amount</div>
+          <input type="text" id="amountInput" class="amount-field" value="Rs 10,000" inputmode="decimal" autocomplete="off">
+        </div>
+
+        <div class="preset-grid" id="amountPresets">
+          <button class="preset-btn" data-amount="1000">1K</button>
+          <button class="preset-btn" data-amount="2000">2K</button>
+          <button class="preset-btn" data-amount="5000">5K</button>
+          <button class="preset-btn" data-amount="10000">10K</button>
+          <button class="preset-btn" data-amount="20000">20K</button>
+          <button class="preset-btn" data-amount="25000">25K</button>
+          <button class="preset-btn" data-amount="50000">50K</button>
+          <button class="preset-btn" data-amount="75000">75K</button>
+          <button class="preset-btn" data-amount="100000">100K</button>
+          <button class="preset-btn" data-amount="250000">250K</button>
+          <button class="preset-btn" data-amount="500000">500K</button>
+          <button class="preset-btn" data-amount="1000000">1M</button>
+          <button class="preset-btn custom-btn" id="customAmountBtn">Custom Amount</button>
+        </div>
+
+        <div class="percentage-hero">
+          <div class="percentage-big" id="selectedPercentDisplay">20%</div>
+          <div class="percentage-hint">drag or use ← →</div>
+        </div>
+
+        <div class="slider-wrapper">
+          <input type="range" id="percentageSlider" class="percentage-slider" min="0" max="100" value="20" step="1">
+          <div class="ticks-container" id="ticksContainer"></div>
+        </div>
+
+        <div class="shortcut-grid" id="percentShortcuts">
+          <button class="shortcut-btn" data-percent="5">5%</button>
+          <button class="shortcut-btn" data-percent="10">10%</button>
+          <button class="shortcut-btn" data-percent="15">15%</button>
+          <button class="shortcut-btn" data-percent="20">20%</button>
+          <button class="shortcut-btn" data-percent="25">25%</button>
+          <button class="shortcut-btn" data-percent="30">30%</button>
+          <button class="shortcut-btn" data-percent="40">40%</button>
+          <button class="shortcut-btn" data-percent="50">50%</button>
+          <button class="shortcut-btn other-btn" id="otherPercentBtn">Other %</button>
+        </div>
+      </div>
+
+      <!-- ===== STICKY RESULT ===== -->
+      <div class="sticky-result">
+        <div class="main-result-card" id="mainResultCard">
+          <div class="main-result-label" id="mainResultLabel">20% of Rs 10,000</div>
+          <div class="main-result-value">
+            <span id="mainResultValue">Rs 2,000</span>
+            <button class="copy-btn" id="copyMainBtn" data-copy="Rs 2000">Copy</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== ADD / SUBTRACT / REMAINING / REFERENCE ===== -->
+      <div class="card card-tight">
+        <div class="result-row">
+          <span class="result-row-label">Add percentage</span>
+          <span class="result-row-value">
+            <span id="addResult">Rs 12,000</span>
+            <button class="copy-icon" data-copy="Rs 12000">Copy</button>
+          </span>
+        </div>
+        <div class="result-row">
+          <span class="result-row-label">Subtract percentage</span>
+          <span class="result-row-value">
+            <span id="subtractResult">Rs 8,000</span>
+            <button class="copy-icon" data-copy="Rs 8000">Copy</button>
+          </span>
+        </div>
+        <div class="result-row">
+          <span class="result-row-label">Remaining amount</span>
+          <span class="result-row-value">
+            <span id="remainingResult">Rs 8,000</span>
+            <button class="copy-icon" data-copy="Rs 8000">Copy</button>
+          </span>
+        </div>
+
+        <div class="section-title" style="margin-top:1.25rem;">Common percentages</div>
+        <div class="reference-grid" id="referenceGrid"></div>
+      </div>
+
+      <!-- ===== FIND PERCENTAGE ===== -->
+      <div class="card tool-section">
+        <div class="tool-title">Find Percentage</div>
+        <div class="two-col-inputs">
+          <div class="input-group">
+            <label>Part</label>
+            <input type="text" id="reversePart" value="Rs 2,000" inputmode="decimal">
+          </div>
+          <div class="input-group">
+            <label>Total</label>
+            <input type="text" id="reverseTotal" value="Rs 10,000" inputmode="decimal">
+          </div>
+        </div>
+        <div class="result-highlight">
+          <span id="reversePercentDisplay">20%</span>
+          <button class="copy-icon" data-copy="20" style="background:#fff;">Copy</button>
+        </div>
+        <div class="small-note">Part ÷ Total × 100</div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    (function() {
+      'use strict';
+
+      const $ = (sel) => document.querySelector(sel);
+      const $$ = (sel) => document.querySelectorAll(sel);
+
+      // ---------- CURRENCY STATE ----------
+      let currency = 'PKR'; // 'PKR' or 'USD'
+
+      function currencySymbol() {
+        return currency === 'PKR' ? 'Rs' : '$';
+      }
+
+      function formatCurrency(num) {
+        const formatted = formatNumber(num);
+        if (currency === 'PKR') {
+          return 'Rs ' + formatted;
+        } else {
+          return '$' + formatted;
+        }
+      }
+
+      function formatCurrencyRaw(num) {
+        const formatted = formatRaw(num);
+        if (currency === 'PKR') {
+          return 'Rs ' + formatted;
+        } else {
+          return '$' + formatted;
+        }
+      }
+
+      function parseNumber(str) {
+        if (typeof str === 'number') return str;
+        if (!str) return 0;
+        const cleaned = str.toString()
+          .replace(/Rs/gi, '')
+          .replace(/\$/g, '')
+          .replace(/,/g, '')
+          .replace(/[^\d.-]/g, '');
+        const num = parseFloat(cleaned);
+        return isNaN(num) ? 0 : num;
+      }
+
+      function formatNumber(num, decimals = 2) {
+        if (num === null || num === undefined || isNaN(num)) return '0';
+        const fixed = Number(num).toFixed(decimals);
+        const parts = fixed.split('.');
+        let intPart = parts[0];
+        const decPart = parts[1];
+        intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        if (decPart && parseFloat(decPart) !== 0) {
+          const trimmed = decPart.replace(/0+$/, '');
+          return intPart + (trimmed ? '.' + trimmed : '');
+        }
+        return intPart;
+      }
+
+      function formatRaw(num) {
+        const fixed = Number(num).toFixed(2);
+        if (fixed.endsWith('.00')) return fixed.slice(0, -3);
+        if (fixed.endsWith('0')) return fixed.slice(0, -1);
+        return fixed;
+      }
+
+      function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+          const btn = event?.target?.closest('button');
+          if (btn) {
+            const original = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(() => { btn.textContent = original; }, 1000);
+          }
+        }).catch(() => {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+        });
+      }
+
+      // ---------- state ----------
+      let amount = 10000;
+      let percent = 20;
+
+      // ---------- DOM refs ----------
+      const amountInput = $('#amountInput');
+      const slider = $('#percentageSlider');
+      const selectedPercentDisplay = $('#selectedPercentDisplay');
+      const mainResultLabel = $('#mainResultLabel');
+      const mainResultValue = $('#mainResultValue');
+      const addResult = $('#addResult');
+      const subtractResult = $('#subtractResult');
+      const remainingResult = $('#remainingResult');
+      const referenceGrid = $('#referenceGrid');
+      const ticksContainer = $('#ticksContainer');
+      const reversePartInput = $('#reversePart');
+      const reverseTotalInput = $('#reverseTotal');
+
+      // ---------- render ticks ----------
+      function renderTicks() {
+        let html = '';
+        for (let i = 0; i <= 10; i++) {
+          const percentVal = i * 10;
+          html += `<div class="tick-major">`;
+          html += `<div class="static-dot"></div>`;
+          if (i > 0 && i < 10) {
+            html += `<div class="tick-group">`;
+            for (let j = 1; j <= 9; j++) {
+              html += `<div class="tick-minor"></div>`;
+            }
+            html += `</div>`;
+          } else {
+            html += `<div style="height:8px;"></div>`;
+          }
+          html += `<span class="tick-label">${percentVal}%</span>`;
+          html += `</div>`;
+        }
+        ticksContainer.innerHTML = html;
+      }
+
+      // ---------- update ----------
+      function updateAll() {
+        if (document.activeElement !== amountInput) {
+          amountInput.value = formatCurrency(amount);
+        }
+
+        selectedPercentDisplay.textContent = percent + '%';
+        slider.value = percent;
+
+        const percAmount = amount * percent / 100;
+        const addVal = amount + percAmount;
+        const subVal = amount - percAmount;
+        const remainingVal = amount - percAmount;
+
+        mainResultLabel.textContent = `${percent}% of ${formatCurrency(amount)}`;
+        mainResultValue.textContent = formatCurrency(percAmount);
+        addResult.textContent = formatCurrency(addVal);
+        subtractResult.textContent = formatCurrency(subVal);
+        remainingResult.textContent = formatCurrency(remainingVal);
+
+        $('#copyMainBtn').dataset.copy = formatCurrencyRaw(percAmount);
+        document.querySelectorAll('.result-row .copy-icon').forEach((btn, idx) => {
+          if (idx === 0) btn.dataset.copy = formatCurrencyRaw(addVal);
+          if (idx === 1) btn.dataset.copy = formatCurrencyRaw(subVal);
+          if (idx === 2) btn.dataset.copy = formatCurrencyRaw(remainingVal);
+        });
+
+        renderReference();
+        updateReverse();
+        updateReverseInputs();
+      }
+
+      function renderReference() {
+        const percents = [5, 10, 15, 20, 25, 30, 40, 50];
+        let html = '';
+        percents.forEach(p => {
+          const val = amount * p / 100;
+          html += `<div class="ref-item" data-percent="${p}">
+            <span class="ref-percent">${p}%</span>
+            <span class="ref-value">${formatCurrency(val)}</span>
+          </div>`;
+        });
+        referenceGrid.innerHTML = html;
+
+        referenceGrid.querySelectorAll('.ref-item').forEach(el => {
+          el.addEventListener('click', () => {
+            const p = parseInt(el.dataset.percent, 10);
+            setPercent(p);
+          });
+        });
+      }
+
+      function setAmount(val) {
+        amount = typeof val === 'number' ? val : parseNumber(val);
+        if (amount < 0) amount = 0;
+        updateAll();
+      }
+
+      function setPercent(val) {
+        let p = Math.round(Number(val));
+        if (isNaN(p)) p = 0;
+        p = Math.min(100, Math.max(0, p));
+        percent = p;
+        updateAll();
+      }
+
+      function updateReverseInputs() {
+        if (document.activeElement !== reversePartInput) {
+          const partNum = parseNumber(reversePartInput.value);
+          if (partNum > 0 || reversePartInput.value === '') {
+            reversePartInput.value = formatCurrency(partNum);
+          }
+        }
+        if (document.activeElement !== reverseTotalInput) {
+          const totalNum = parseNumber(reverseTotalInput.value);
+          if (totalNum > 0 || reverseTotalInput.value === '') {
+            reverseTotalInput.value = formatCurrency(totalNum);
+          }
+        }
+      }
+
+      function updateReverse() {
+        const part = parseNumber(reversePartInput.value);
+        const total = parseNumber(reverseTotalInput.value);
+        let result = 0;
+        if (total !== 0) {
+          result = (part / total) * 100;
+        }
+        const display = formatNumber(result, 2) + '%';
+        $('#reversePercentDisplay').textContent = display;
+        document.querySelector('#reversePart').closest('.card').querySelector('.copy-icon').dataset.copy = formatRaw(result);
+      }
+
+      // ---------- CURRENCY SWITCHER ----------
+      const currencyToggle = $('#currencyToggle');
+      const optPKR = $('#optPKR');
+      const optUSD = $('#optUSD');
+
+      function setCurrency(newCurrency) {
+        if (newCurrency === currency) return;
+        currency = newCurrency;
+
+        if (currency === 'USD') {
+          optUSD.classList.add('active');
+          optPKR.classList.remove('active');
+          currencyToggle.setAttribute('aria-checked', 'true');
+        } else {
+          optPKR.classList.add('active');
+          optUSD.classList.remove('active');
+          currencyToggle.setAttribute('aria-checked', 'false');
+        }
+
+        updateAll();
+        amountInput.value = formatCurrency(amount);
+        updateReverseInputs();
+      }
+
+      currencyToggle.addEventListener('click', () => {
+        setCurrency(currency === 'PKR' ? 'USD' : 'PKR');
+      });
+
+      currencyToggle.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          setCurrency(currency === 'PKR' ? 'USD' : 'PKR');
+        }
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          setCurrency('PKR');
+        }
+        if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          setCurrency('USD');
+        }
+      });
+
+      // Also allow clicking directly on individual options
+      optPKR.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setCurrency('PKR');
+      });
+      optUSD.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setCurrency('USD');
+      });
+
+      // ---------- initial ----------
+      renderTicks();
+      setAmount(10000);
+      setPercent(20);
+      updateReverse();
+      amountInput.value = formatCurrency(amount);
+      reversePartInput.value = formatCurrency(2000);
+      reverseTotalInput.value = formatCurrency(10000);
+
+      // ---------- events ----------
+
+      amountInput.addEventListener('input', (e) => {
+        const val = parseNumber(e.target.value);
+        amount = val;
+        updateAll();
+      });
+      amountInput.addEventListener('blur', () => {
+        amountInput.value = formatCurrency(amount);
+      });
+      amountInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') amountInput.blur();
+      });
+
+      document.querySelectorAll('#amountPresets .preset-btn[data-amount]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const val = parseFloat(btn.dataset.amount);
+          setAmount(val);
+        });
+      });
+
+      $('#customAmountBtn').addEventListener('click', () => {
+        amountInput.focus();
+        amountInput.select();
+      });
+
+      slider.addEventListener('input', (e) => {
+        setPercent(parseInt(e.target.value, 10));
+      });
+
+      document.querySelectorAll('#percentShortcuts .shortcut-btn[data-percent]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          setPercent(parseInt(btn.dataset.percent, 10));
+        });
+      });
+
+      $('#otherPercentBtn').addEventListener('click', () => {
+        slider.focus();
+      });
+
+      document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.copy-btn, .copy-icon');
+        if (btn && btn.dataset.copy !== undefined) {
+          copyToClipboard(btn.dataset.copy);
+        }
+      });
+
+      reversePartInput.addEventListener('input', updateReverse);
+      reverseTotalInput.addEventListener('input', updateReverse);
+      reversePartInput.addEventListener('blur', () => {
+        const val = parseNumber(reversePartInput.value);
+        reversePartInput.value = formatCurrency(val);
+        updateReverse();
+      });
+      reverseTotalInput.addEventListener('blur', () => {
+        const val = parseNumber(reverseTotalInput.value);
+        reverseTotalInput.value = formatCurrency(val);
+        updateReverse();
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (document.activeElement === slider) {
+          if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+            e.preventDefault();
+            const step = e.key === 'ArrowLeft' ? -1 : 1;
+            const newVal = Math.min(100, Math.max(0, percent + step));
+            setPercent(newVal);
+          }
+        }
+      });
+
+    })();
+  </script>
+</body>
+</html>
